@@ -14,6 +14,9 @@ GitHub: https://github.com/arman-bd/khudro
 //Winsock Library
 #include<winsock2.h>
 
+// Include Required File
+#include "mime-list.c"
+
 
 int send_file(FILE *fp, SOCKET socket, int file_size);
 
@@ -39,11 +42,11 @@ int main(){
 
     // File
     FILE *fp;
-    char file_directory[256] = "G:\\GitHub\\khudro\\htdocs";
-    char file_name[256];
-    char file_path[512];
-    char file_type[32];
-    long file_size;
+    char file_directory[512] = "G:\\GitHub\\khudro\\htdocs";
+    char file_name[1024] = "";
+    char file_path[4096] = "";
+    char file_type[256] = "";
+    long file_size = 0;
 
 
     versionRequested = MAKEWORD(2, 2);
@@ -127,7 +130,6 @@ int main(){
 
     // Receive Data From Client
     bytesRecv = recv(AcceptSocket, recvbuf, 4096, 0);
-    free(recvbuf);
 
     if(bytesRecv == SOCKET_ERROR){
         printf("Server: Receive Error - %ld.\n", WSAGetLastError());
@@ -156,6 +158,9 @@ int main(){
         // Move To Next Data [ URL ]
         receive_array = strtok(NULL, " ");
 
+        // Check If ? Exists
+
+
         // Now We Have Requested URL
         strcpy(file_name, receive_array);
 
@@ -176,11 +181,9 @@ int main(){
         strcat(file_path, file_name);
 
         printf("> Requested File: %s\n", file_path);
-        content_type(file_name, &file_type);
+        get_mime_type(file_name, &file_type);
     }
-
-    fp = fopen(file_path, "rb");
-    if(fp){
+    if((fp = fopen(file_path, "rb")) != NULL){
         // Get File Size
         fseek(fp, 0L, SEEK_END);
         file_size = ftell(fp);
@@ -208,7 +211,6 @@ int main(){
         fclose(fp);
     }else{
         // File Not Found
-
         strcpy(header, "HTTP/1.1 404 Not Found\n");
         strcat(header, "Content-Type: text/html; charset=utf-8\n");
         strcat(header, "Content-Length: 26");
@@ -248,36 +250,4 @@ int send_file(FILE *fp, SOCKET socket, int file_size){
     return byteSent;
 }
 
-void content_type(char file_name[256], char *result){
-    /*
-        Get File Type
-    */
-    char *name_array;
-    char extension[32];
 
-    name_array = strtok(file_name, ".");
-    while(name_array != NULL){
-        strcpy(extension, name_array);
-        name_array = strtok(NULL, ".");
-    }
-
-    strcpy(result, "text/plain");
-
-    if(strcmp(extension, "html") == 0){
-        strcpy(result, "text/html");
-    }
-    if(strcmp(extension, "jpg") == 0){
-        strcpy(result, "image/jpeg");
-    }
-    if(strcmp(extension, "txt") == 0){
-        strcpy(result, "text/plain");
-    }
-    if(strcmp(extension, "png") == 0){
-        strcpy(result, "image/png");
-    }
-    if(strcmp(extension, "ico") == 0){
-        strcpy(result, "image/x-icon");
-    }
-
-    printf("> File Extension: %s\n", extension);
-}
