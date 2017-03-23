@@ -275,8 +275,9 @@ void content_type(char file_name[256], char *result){
     if(strcmp(extension, "png") == 0){
         strcpy(result, "image/png");
     }
-
-
+    if(strcmp(extension, "ico") == 0){
+        strcpy(result, "image/x-icon");
+    }
 
     printf("> File Extension: %s\n", extension);
 }
