@@ -7,3 +7,5 @@ There are many stable web-servers out there,
 but the main purpose of this project is to
 build a lightweight web-server with 
 a small functionality of serving simple files.
+
+<img src="http://i.imgur.com/T2DgwP7.jpg" width="600">
