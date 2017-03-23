@@ -1,0 +1,6 @@
+*.o
+khudro.cbp
+khudro.depend
+*.layout
+bin/Debug/khudro.exe
+bin/Debug/hello.txt
