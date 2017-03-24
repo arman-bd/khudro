@@ -1,0 +1,14 @@
+# depslib dependency file v1.0
+1490357767 source:g:\github\khudro\main.c
+	<io.h>
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+	<winsock2.h>
+	"mime-list.c"
+	"function.c"
+
+1490307494 g:\github\khudro\mime-list.c
+
+1490358092 g:\github\khudro\function.c
+

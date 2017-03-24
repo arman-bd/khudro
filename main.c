@@ -16,6 +16,7 @@ GitHub: https://github.com/arman-bd/khudro
 
 // Include Required File
 #include "mime-list.c"
+#include "function.c"
 
 
 int send_file(FILE *fp, SOCKET socket, int file_size);
@@ -29,11 +30,12 @@ int main(){
     WSADATA wsaData;
     int wsaError;
     int default_port = 8080;
-    int bytesSent;
     int bytesRecv = SOCKET_ERROR;
+    SOCKET m_socket;
     SOCKET AcceptSocket;
     char header[4096];
     char recvbuf[4096];
+    char web_out[512];
     char lenbuf[32];
 
     // Received Header
@@ -65,9 +67,6 @@ int main(){
         WSACleanup();
         return 0;
     }
-
-    // Create Socket
-    SOCKET m_socket;
 
     // Define Socket Preference
     m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -103,19 +102,21 @@ int main(){
         printf("Server: Binded Successfully!\n");
     }
 
-    // Listen For Request
-    listen_for_client:
+
 
     if(listen(m_socket, 10) == SOCKET_ERROR){
-       printf("\nError: Error Listening on Port [ %d ] - %ld.\n", default_port, WSAGetLastError());
+       printf("\nError: Unable To Listen On Port [ %d ] - %ld.\n", default_port, WSAGetLastError());
     }else{
        printf("\nServer: Listening On Port [ %d ]\n", default_port);
     }
 
 
+    // Listen For Request
+    listen_for_client:
 
+    // Waiting For Client
     printf("Server: Waiting For Client...\n" );
-    // Do some verification...
+
     while(1){
         AcceptSocket = SOCKET_ERROR;
 
@@ -179,55 +180,57 @@ int main(){
         // Make File Path
         strcpy(file_path, file_directory);
         strcat(file_path, file_name);
-
-        printf("> Requested File: %s\n", file_path);
         get_mime_type(file_name, &file_type);
+
+        printf("> Requested File: %s [ %s ]\n", file_path, file_type);
     }
+
     if((fp = fopen(file_path, "rb")) != NULL){
+
         // Get File Size
-        fseek(fp, 0L, SEEK_END);
-        file_size = ftell(fp);
-        fseek(fp, 0L, SEEK_SET);
-        sprintf(lenbuf, "%ld", file_size);
-
+        file_size = getFileSize(fp);
         // Pack Header
-        strcpy(header, "HTTP/1.1 200 OK\n");
-        strcat(header, "Content-Type: ");
-        strcat(header, file_type);
-        strcat(header, "; charset=utf-8\n");
-        strcat(header, "Content-Length: ");
-        strcat(header, lenbuf);
-        strcat(header, "\n\n");
-
+        pack_header(200, file_type, file_size, &header);
         // Send Header First
-        bytesSent = 0;
-        bytesSent += send(AcceptSocket, header, strlen(header), 0);
-        printf("\n>>> HEADER :: \n%s\n", header);
-
+        send(AcceptSocket, header, strlen(header), 0);
         // Send File To Client
-        bytesSent += send_file(fp, AcceptSocket, file_size);
-
-        // Close File Pointer
+        send_file(fp, AcceptSocket, file_size);
+        // Close File
         fclose(fp);
+
     }else{
-        // File Not Found
-        strcpy(header, "HTTP/1.1 404 Not Found\n");
-        strcat(header, "Content-Type: text/html; charset=utf-8\n");
-        strcat(header, "Content-Length: 26");
-        strcat(header, "\n\n");
-        strcat(header, "Error 404 - File Not Found");
+        // Content Not Found!
+        printf("> File Not Found!\n");
 
-        bytesSent = 0;
-        bytesSent += send(AcceptSocket, header, strlen(header), 0);
-        printf("\n>>> HEADER :: \n%s\n", header);
-    }
+        // Try 404!
+        strcpy(file_name, "\\error404.html");
+        strcpy(file_path, file_directory);
+        strcat(file_path, file_name);
+        // Get MIME Type
+        get_mime_type(file_name, &file_type);
 
+        if((fp = fopen(file_path, "rb")) != NULL){
+            // Get File Size
+            file_size = getFileSize(fp);
+            // Pack Header
+            pack_header(404, file_type, file_size, &header);
+            // Send Header First
+            send(AcceptSocket, header, strlen(header), 0);
+            // Send File To Client
+            send_file(fp, AcceptSocket, file_size);
+            // Close File
+            fclose(fp);
+        }else{
+            // 404 Handler Not Found!
+            strcpy(web_out, "Error 404 page not found,<br>");
+            strcat(web_out, "additional error occurred<br>");
+            strcat(web_out, "while finding 404 error handler page!");
 
-    if(bytesSent == SOCKET_ERROR){
-           printf("Error: Unable To Send - %ld.\n", WSAGetLastError());
-    }else{
-           printf("Server: Data Sent.\n");
-           printf("Server: Bytes Sent: %ld.\n", bytesSent);
+            // Send Error
+            pack_header(404, "text/html", strlen(web_out), &header);
+            strcat(header, web_out);
+            send(AcceptSocket, header, strlen(header), 0);
+        }
     }
 
     // Close Connection
@@ -239,15 +242,3 @@ int main(){
     WSACleanup();
     return 0;
 }
-
-int send_file(FILE *fp, SOCKET socket, int file_size){
-    int byteSent;
-    char *file_buff;
-    file_buff = malloc(file_size + 1);
-    fread(file_buff, sizeof(char), file_size + 1, fp);
-    byteSent = send(socket, file_buff, file_size, 0);
-    free(file_buff);
-    return byteSent;
-}
-
-
