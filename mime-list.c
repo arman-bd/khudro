@@ -14,6 +14,7 @@ void get_mime_type(char *file_name, char *result){
         name_array = strtok(NULL, ".");
     }
 
+    //result = malloc(128);
     strcpy(result, "text/plain");
 
     if(strcmp(extension, "3dm") == 0){strcpy(result, "x-world/x-3dmf"); return;}
