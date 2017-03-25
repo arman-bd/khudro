@@ -19,6 +19,7 @@ char __ServerOS[32] = "Win32";
 #include<winsock2.h>
 
 // Include Required File
+#include "config.c"
 #include "mime-list.c"
 #include "function.c"
 
@@ -27,8 +28,6 @@ int main(){
     // Misc.
     int i, j;
 
-    // Default Configuration
-
     // Socket
     WORD versionRequested;
     WSADATA wsaData;
@@ -36,10 +35,6 @@ int main(){
     int bytesRecv = SOCKET_ERROR;
     SOCKET MainSocket;
     SOCKET AcceptSocket;
-
-    // Connection Property
-    char default_ip[16] = "127.0.0.1";
-    int default_port = 8080;
 
     // Received Header
     char receive_buffer[4096];
@@ -51,21 +46,38 @@ int main(){
 
     // File
     FILE *fp;
-    char file_directory[512] = "G:\\GitHub\\khudro\\htdocs";
     char file_name[1024] = "";
     char file_path[4096] = "";
     char *file_type = malloc(128);
-    long file_size = 0;
+    size_t file_size = 0;
 
-    // Default Configuration
-    /*
+    // Configuration
+    char default_ip[16] = "127.0.0.1";
+    char default_dir[512] = "htdocs";
+    int default_port = 8080;
+    int compression = 0;
+    size_t max_buffer = 0;
+
+    // Load Default Configuration
     s_conf server_conf;
     server_conf = parse_config("G:\\GitHub\\khudro\\khudro.conf");
-    printf("Default IP: %s\n", server_conf.default_ip);
-    printf("Default Port: %d\n", server_conf.default_port);
-    printf("Default Directory: %s\n", server_conf.default_dir);
-    printf("Compression: %d\n", server_conf.compression);
-    */
+
+    if(strcmp(default_ip, server_conf.default_ip)){
+        strcpy(default_ip, server_conf.default_ip);
+    }
+    if(strcmp(default_dir, server_conf.default_dir)){
+        strcpy(default_dir, server_conf.default_dir);
+    }
+    if(default_port != server_conf.default_port){
+        default_port = server_conf.default_port;
+    }
+    if(compression != server_conf.compression){
+        compression = server_conf.compression;
+    }
+    if(max_buffer != server_conf.max_buffer){
+        max_buffer = server_conf.max_buffer;
+    }
+
 
     /* Start Socket Initialization */
     versionRequested = MAKEWORD(2, 2);
@@ -197,7 +209,7 @@ int main(){
         }
 
         // Make File Path
-        sprintf(file_path, "%s%s", file_directory, file_name);
+        sprintf(file_path, "%s%s", default_dir, file_name);
 
         // Display Info About Requested File
         //printf("> Requested File: %s [ %s ]\n", file_path, file_type);
@@ -213,7 +225,7 @@ int main(){
         // Send Header
         send_header(AcceptSocket, 200, file_type, file_size);
         // Send File To Client
-        send_file(AcceptSocket, fp, file_size);
+        send_file(AcceptSocket, fp, file_size, max_buffer);
         // Close File
         fclose(fp);
     }else{
@@ -222,7 +234,7 @@ int main(){
 
         // Try 404 Handler!
         sprintf(file_name, "\\error404.html");
-        sprintf(file_path, "%s%s", file_directory, file_name);
+        sprintf(file_path, "%s%s", default_dir, file_name);
 
         // Get MIME Type
         get_mime_type(file_name, file_type);
@@ -233,7 +245,7 @@ int main(){
             // Pack Header
             send_header(AcceptSocket, 404, file_type, file_size);
             // Send File To Client
-            send_file(AcceptSocket, fp, file_size);
+            send_file(AcceptSocket, fp, file_size, max_buffer);
             // Close File
             fclose(fp);
         }else{
