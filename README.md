@@ -14,12 +14,16 @@ a small functionality of serving simple files.
 * Follows Some Web-Standards ( More to be added )
 * 400+ MIME-Type Support based on File Extension
 * 404-Error ( File Not Found ) Handler
+* Configuration File
+* Sending Buffer Limit ( To Conserve Memory )
 
 ## Features To Be Added
 
-* Configuration File
 * Compression Support
 * C Based Scripting [ as plugin ]
+* E-Tag Support
+* File Modified Check
+* Cache-Control Support
 
 
 <img src="http://i.imgur.com/T2DgwP7.jpg" width="600">
