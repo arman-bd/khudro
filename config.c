@@ -4,7 +4,7 @@ struct server_config {
     int default_port;
     char default_dir[512];
     int compression;
-    int max_buffer;
+    size_t max_buffer;
 };
 
 typedef struct server_config s_conf;
@@ -51,7 +51,7 @@ s_conf parse_config(char *file_path){
                     config_store.compression = atoi(param_value);
                 }
                 if(strcmp(param_name, "max_buffer") == 0){
-                    config_store.max_buffer = atoi(param_value);
+                    config_store.max_buffer = atol(param_value);
                 }
             }
             conf_array = strtok(NULL, "\r\n");
