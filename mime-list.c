@@ -2,6 +2,8 @@
 void get_mime_type(char *file_name, char *result){
     /*
         Get MIME Type of File from file extension
+        @file_name : File Name with File Extension
+        @result : [ Return Value ]
     */
     char *name_array;
     char extension[16];
