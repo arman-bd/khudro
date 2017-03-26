@@ -14,9 +14,12 @@ char __ServerOS[32] = "Win32";
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
+#include<time.h>
+#include<sys/stat.h>
 
-//Winsock Library
+// Windows Library
 #include<winsock2.h>
+
 
 // Include Required File
 #include "config.c"
