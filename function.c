@@ -76,6 +76,7 @@ size_t getFileSize(FILE *fp){
     Source: http://stackoverflow.com/a/2727122
 */
 
+/*
 static const char *DAY_NAMES[] =
   { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 static const char *MONTH_NAMES[] =
@@ -95,4 +96,4 @@ char *Rfc1123_DateTime(time_t t){
 
     return buf;
 }
-
+*/
