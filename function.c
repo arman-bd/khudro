@@ -71,3 +71,28 @@ size_t getFileSize(FILE *fp){
     return file_size;
 }
 
+/*
+    Generating RFC 1123 Time Stamp
+    Source: http://stackoverflow.com/a/2727122
+*/
+
+static const char *DAY_NAMES[] =
+  { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+static const char *MONTH_NAMES[] =
+  { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+char *Rfc1123_DateTime(time_t t){
+    const int RFC1123_TIME_LEN = 29;
+    struct tm tm;
+    char * buf = malloc(RFC1123_TIME_LEN+1);
+
+    gmtime_s(&tm, &t);
+
+    strftime(buf, RFC1123_TIME_LEN+1, "---, %d --- %Y %H:%M:%S GMT", &tm);
+    memcpy(buf, DAY_NAMES[tm.tm_wday], 3);
+    memcpy(buf+8, MONTH_NAMES[tm.tm_mon], 3);
+
+    return buf;
+}
+
