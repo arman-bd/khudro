@@ -1,17 +1,31 @@
 # depslib dependency file v1.0
-1490484377 source:g:\github\khudro\main.c
+1490558458 source:g:\github\khudro\main.c
 	<io.h>
 	<stdio.h>
 	<string.h>
 	<stdlib.h>
+	<Windows.h>
 	<winsock2.h>
 	"config.c"
 	"mime-list.c"
 	"function.c"
+	"compress.c"
 
-1490389062 g:\github\khudro\mime-list.c
+1490533113 g:\github\khudro\mime-list.c
 
 1490484837 g:\github\khudro\function.c
 
 1490484407 g:\github\khudro\config.c
+
+1490558835 g:\github\khudro\compress.c
+	"lib/zlib/zlib.h"
+
+1121639210 g:\github\khudro\lib\zlib\zlib.h
+	"zconf.h"
+
+1117248036 g:\github\khudro\lib\zlib\zconf.h
+	<windows.h>
+	<sys/types.h>
+	<unistd.h>
+	<unixio.h>
 
