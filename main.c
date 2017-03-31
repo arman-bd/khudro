@@ -1,12 +1,16 @@
 /*
 Project: Khudro Web-Server
+
 By: Arman Hossain
+CSE 11'th Batch,
+Shanto-Mariam University of Creative Technology
+Dhaka, Bangladesh
 
 GitHub: https://github.com/arman-bd/khudro
 */
 
 char __ServerName[128] = "Khudro";
-char __ServerVersion[16] = "0.0.1";
+char __ServerVersion[16] = "0.1.1";
 char __ServerOS[32] = "Win32";
 
 // Include Required Headers
@@ -25,11 +29,10 @@ char __ServerOS[32] = "Win32";
 #include "config.c"
 #include "mime-list.c"
 #include "function.c"
+#include "request.c"
+#include "response.c"
 
 int main(){
-
-    // Misc.
-    int i, j;
 
     // Socket
     WORD versionRequested;
@@ -39,62 +42,20 @@ int main(){
     SOCKET MainSocket;
     SOCKET AcceptSocket;
 
-    // Received Header
-    char receive_buffer[4096];
-    char *receive_array;
-    char request_method[8];
-
-    // Web Output
-    char web_buffer[512];
+    // Request Data
+    rqpack request_data;
 
     // File
     FILE *fp;
-    char file_name[1024] = "";
-    char file_path[4096] = "";
     char *file_type = malloc(128);
     size_t file_size = 0;
 
-    // Configuration
-    char default_ip[16] = "127.0.0.1";
-    char default_dir[512] = "htdocs";
-    int default_port = 8080;
-    int compression = 0;
-    size_t max_buffer = 0;
-
+    // Print Application Name
     printf("::: %s v%s - %s :::\n\n", __ServerName, __ServerVersion, __ServerOS);
 
     // Load Default Configuration
     s_conf server_conf;
-    server_conf = parse_config("khudro.conf");
-
-    if(strcmp(default_ip, server_conf.default_ip)){
-        strcpy(default_ip, server_conf.default_ip);
-    }
-    if(strcmp(default_dir, server_conf.default_dir)){
-        strcpy(default_dir, server_conf.default_dir);
-    }
-    if(default_port != server_conf.default_port){
-        default_port = server_conf.default_port;
-    }
-    if(compression != server_conf.compression){
-        compression = server_conf.compression;
-    }
-    if(max_buffer != server_conf.max_buffer){
-        max_buffer = server_conf.max_buffer;
-    }
-
-    printf("Configuration Loaded:\n");
-    printf("Default IP: %s\n", server_conf.default_ip);
-    printf("Default Port: %d\n", server_conf.default_port);
-    printf("Default Directory: %s\n", server_conf.default_dir);
-    if(server_conf.compression == 0){
-        printf("Compression: Disabled\n");
-    }else{
-        printf("Compression: Enabled\n");
-    }
-    printf("Maximum Buffer: %llu Byte(s)\n\n", server_conf.max_buffer);
-
-
+    server_conf = parse_config("khudro.conf", 1);
 
     /* Start Socket Initialization */
     versionRequested = MAKEWORD(2, 2);
@@ -128,16 +89,10 @@ int main(){
 
 
     /* Start Binding */
-
-    // Create a sockaddr_in object
     struct sockaddr_in service;
-
-    // AF_INET is the Internet address family.
-    service.sin_family = AF_INET;
-    // "127.0.0.1" is the local IP address to which the socket will be bound.
-    service.sin_addr.s_addr = inet_addr(default_ip);
-    // 55555 is the port number to which the socket will be bound.
-    service.sin_port = htons(default_port);
+    service.sin_family = AF_INET; // AF_INET is the Internet address family.
+    service.sin_addr.s_addr = inet_addr(server_conf.default_ip); // Local IP
+    service.sin_port = htons(server_conf.default_port);// Local Port
 
     // Bind Socket
     if (bind(MainSocket, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR){
@@ -147,15 +102,13 @@ int main(){
         return 0;
     }else{
         printf("Server: Binded Successfully\n");
-        printf("Server: IP [ %s ]\n", default_ip);
+        printf("Server: IP [ %s ]\n", server_conf.default_ip);
     }
 
-
-
     if(listen(MainSocket, 10) == SOCKET_ERROR){
-       printf("Error: Unable To Listen On Port [ %d ] - %ld.\n", default_port, WSAGetLastError());
+       printf("Error: Unable To Listen On Port [ %d ] - %ld.\n", server_conf.default_port, WSAGetLastError());
     }else{
-       printf("Server: Listening On Port [ %d ]\n", default_port);
+       printf("Server: Listening On Port [ %d ]\n", server_conf.default_port);
     }
 
     printf("\n");
@@ -174,121 +127,29 @@ int main(){
     }
 
     // Receive Data From Client
-    bytesRecv = recv(AcceptSocket, receive_buffer, 4096, 0);
-
-    if(bytesRecv == SOCKET_ERROR){
-        printf("Error: Data Receive Error [ 0x01 ] - %ld\n", WSAGetLastError());
-    }else{
-        if(bytesRecv == 0){ // PING Request
-            //printf("Server: PING Request\n");
-            // Close Connection
-            closesocket(AcceptSocket);
-            // Repeat Process
-            goto listen_for_client;
-        }
-
-        // Process Received Header
-        receive_array = strtok(receive_buffer, "\n");
-
-        // Re-Tokenize To Parse First Lines
-        receive_array = strtok(receive_array, " ");
-
-        // Not We Have Request Method [ GET, POST, PUT, DELETE ]
-        strcpy(request_method, receive_array);
-
-        // Move To Next Data [ URL ]
-        receive_array = strtok(NULL, " ");
-
-        // Now We Have Requested URL
-        strcpy(file_name, receive_array);
-
-        // Check If ? Exists
-        for(i = 0; i < strlen(file_name); i++){
-            if(file_name[i] == '?'){
-                // Discard [ Query Parameter ]
-                for(j = i; j < strlen(file_name); j++){
-                    file_name[j] = '\0';
-                }
-            }
-        }
+    bytesRecv = process_request(AcceptSocket, server_conf, &request_data);
 
 
-        // Check For Basic
-        if(strcmp(file_name, "/") == 0){ // For index.html
-            strcpy(file_name, "/index.html");
-        }
-
-        // Convert Slash
-        for(i = 0; i < strlen(file_name); i++){
-            if(file_name[i] == '/'){
-                file_name[i] = '\\';
-            }
-        }
-
-        // Make File Path
-        sprintf(file_path, "%s%s", default_dir, file_name);
-
-        // Display Info About Requested File
-        //printf("> Requested File: %s [ %s ]\n", file_path, file_type);
+    if(bytesRecv == -1){
+        // PING Request
+        closesocket(AcceptSocket); // Close Socket
+        goto listen_for_client; // Repeat Process
     }
 
-    if((fp = fopen(file_path, "rb")) != NULL){
+    if((fp = fopen(request_data.file_path, "rb")) != NULL){
         /* File Found, Now Get Some Information About File And Send It */
-
-        // Get MIME Type
-        get_mime_type(file_name, file_type);
-        // Get File Size
-        file_size = getFileSize(fp);
-        // Send Header
-        send_header(AcceptSocket, 200, file_type, file_size);
-        // Send File To Client
-        send_file(AcceptSocket, fp, file_size, max_buffer);
-        // Close File
-        fclose(fp);
+        get_mime_type(request_data.file_name, file_type); // Get MIME Type
+        file_size = getFileSize(fp); // Get File Size
+        send_response_header(AcceptSocket, 200, file_type, file_size); // Send Header
+        send_response_file(AcceptSocket, fp, file_size, server_conf.max_buffer); // Send File To Client
+        fclose(fp); // Close File
     }else{
-        // Content Not Found!
-        printf("Error: File Not Found [ 0x02 ]\n");
-
-        // Try 404 Handler!
-        sprintf(file_name, "\\error404.html");
-        sprintf(file_path, "%s%s", default_dir, file_name);
-
-        // Get MIME Type
-        get_mime_type(file_name, file_type);
-
-        if((fp = fopen(file_path, "rb")) != NULL){
-            // Get File Size
-            file_size = getFileSize(fp);
-            // Pack Header
-            send_header(AcceptSocket, 404, file_type, file_size);
-            // Send File To Client
-            send_file(AcceptSocket, fp, file_size, max_buffer);
-            // Close File
-            fclose(fp);
-        }else{
-            printf("Error: Error Handler Not Found [ 0x03 ]\n");
-            // 404 Handler Not Found!
-            strcpy(web_buffer, "Error 404 page not found,<br>");
-            strcat(web_buffer, "additional error occurred<br>");
-            strcat(web_buffer, "while finding 404 error handler page!");
-
-            // Send Header
-            if(send_header(AcceptSocket, 404, "text/html", strlen(web_buffer)) == SOCKET_ERROR){
-                printf("Error: Unable To Send [Header] To Client [ 0x04 ]\n");
-            }
-
-            // Send Content
-            if(send_content(AcceptSocket, web_buffer) == SOCKET_ERROR){
-                printf("Error: Unable To Send [Body] To Client [ 0x05 ]\n");
-            }
-        }
+        send_response_error(AcceptSocket, 404, server_conf, 0); // No Debug Print
     }
 
-    // Close Connection
-    closesocket(AcceptSocket);
 
-    // Repeat Process
-    goto listen_for_client;
+    closesocket(AcceptSocket); // Close Connection
+    goto listen_for_client; // Repeat Process
 
     WSACleanup();
     return 0;
