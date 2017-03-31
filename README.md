@@ -28,4 +28,4 @@ a small functionality of serving simple files.
 
 
 
-<img src="http://imgur.com/jP2fD72" width="600">
+<img src="http://imgur.com/jP2fD72.png" width="600">
