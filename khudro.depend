@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1490980026 source:g:\github\khudro\main.c
+1491000066 source:g:\github\khudro\main.c
 	<io.h>
 	<stdio.h>
 	<string.h>
@@ -10,12 +10,14 @@
 	"config.c"
 	"mime-list.c"
 	"function.c"
+	"request.c"
+	"response.c"
 
 1490533113 g:\github\khudro\mime-list.c
 
-1490562245 g:\github\khudro\function.c
+1491000801 g:\github\khudro\function.c
 
-1490979975 g:\github\khudro\config.c
+1490999764 g:\github\khudro\config.c
 
 1490558835 g:\github\khudro\compress.c
 	"lib/zlib/zlib.h"
@@ -28,4 +30,8 @@
 	<sys/types.h>
 	<unistd.h>
 	<unixio.h>
+
+1491000787 g:\github\khudro\request.c
+
+1491000992 g:\github\khudro\response.c
 
