@@ -5,11 +5,12 @@ struct server_config {
     char default_dir[512];
     int compression;
     unsigned long long max_buffer;
+    unsigned long long receive_buffer;
 };
 
 typedef struct server_config s_conf;
 
-s_conf parse_config(char *file_path){
+s_conf parse_config(char *file_path, int debug_display){
 
     FILE *fp;
     char *file_buff;
@@ -68,6 +69,28 @@ s_conf parse_config(char *file_path){
                         config_store.max_buffer = (unsigned long long)param_number * 1024 * 1024 * 1024;
                     }
                 }
+                if(strcmp(param_name, "receive_buffer") == 0){
+
+                    config_store.receive_buffer = 0;
+
+                    if(strstr(param_value, "KB") != NULL){
+                        sscanf(param_value, "%dKB", &param_number);
+                        config_store.receive_buffer = (unsigned long long)param_number * 1024;
+                    }
+                    if(strstr(param_value, "MB") != NULL){
+                        sscanf(param_value, "%dMB", &param_number);
+                        config_store.receive_buffer = (unsigned long long)param_number * 1024 * 1024;
+                    }
+                    if(strstr(param_value, "GB") != NULL){
+                        sscanf(param_value, "%dGB", &param_number);
+                        config_store.receive_buffer = (unsigned long long)param_number * 1024 * 1024 * 1024;
+                    }
+
+                    if(config_store.receive_buffer == 0){
+                        // Default Buffer
+                        config_store.receive_buffer = 4096;
+                    }
+                }
             }
             conf_array = strtok(NULL, "\r\n");
         }
@@ -79,6 +102,20 @@ s_conf parse_config(char *file_path){
         strcpy(config_store.default_dir, "htdocs");
         config_store.compression = 0;
         config_store.max_buffer = 0;
+    }
+
+    if(debug_display == 1){
+        printf("Configuration Loaded:\n");
+        printf("Default IP: %s\n", config_store.default_ip);
+        printf("Default Port: %d\n", config_store.default_port);
+        printf("Default Directory: %s\n", config_store.default_dir);
+        if(config_store.compression == 0){
+            printf("Compression: Disabled\n");
+        }else{
+            printf("Compression: Enabled\n");
+        }
+        printf("Receive Buffer: %llu Byte(s)\n", config_store.receive_buffer);
+        printf("Send Buffer: %llu Byte(s)\n\n", config_store.max_buffer);
     }
 
     return config_store;
