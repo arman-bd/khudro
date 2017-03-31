@@ -4,7 +4,7 @@ struct server_config {
     int default_port;
     char default_dir[512];
     int compression;
-    size_t max_buffer;
+    unsigned long long max_buffer;
 };
 
 typedef struct server_config s_conf;
@@ -18,6 +18,7 @@ s_conf parse_config(char *file_path){
     char *conf_array;
     char param_name[64];
     char param_value[512];
+    int param_number;
 
     s_conf config_store;
 
@@ -42,16 +43,30 @@ s_conf parse_config(char *file_path){
                     strcpy(config_store.default_ip, param_value);
                 }
                 if(strcmp(param_name, "default_port") == 0){
-                    config_store.default_port = atoi(param_value);
+                    sscanf(param_value, "%d", &config_store.default_port);
                 }
                 if(strcmp(param_name, "default_dir") == 0){
                     strcpy(config_store.default_dir, param_value);
                 }
                 if(strcmp(param_name, "compression") == 0){
-                    config_store.compression = atoi(param_value);
+                    sscanf(param_value, "%d", &config_store.compression);
                 }
                 if(strcmp(param_name, "max_buffer") == 0){
-                    config_store.max_buffer = atol(param_value);
+
+                    config_store.max_buffer = 0;
+
+                    if(strstr(param_value, "KB") != NULL){
+                        sscanf(param_value, "%dKB", &param_number);
+                        config_store.max_buffer = (unsigned long long)param_number * 1024;
+                    }
+                    if(strstr(param_value, "MB") != NULL){
+                        sscanf(param_value, "%dMB", &param_number);
+                        config_store.max_buffer = (unsigned long long)param_number * 1024 * 1024;
+                    }
+                    if(strstr(param_value, "GB") != NULL){
+                        sscanf(param_value, "%dGB", &param_number);
+                        config_store.max_buffer = (unsigned long long)param_number * 1024 * 1024 * 1024;
+                    }
                 }
             }
             conf_array = strtok(NULL, "\r\n");
