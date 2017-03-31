@@ -16,6 +16,7 @@ a small functionality of serving simple files.
 * 404-Error ( File Not Found ) Handler
 * Configuration File
 * Sending Buffer Limit ( To Conserve Memory )
+* Receiving Buffer Limit
 
 ## Features To Be Added
 
@@ -26,4 +27,5 @@ a small functionality of serving simple files.
 * Cache-Control Support
 
 
-<img src="http://i.imgur.com/T2DgwP7.jpg" width="600">
+
+<img src="http://imgur.com/jP2fD72" width="600">
