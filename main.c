@@ -61,9 +61,11 @@ int main(){
     int compression = 0;
     size_t max_buffer = 0;
 
+    printf("::: %s v%s - %s :::\n\n", __ServerName, __ServerVersion, __ServerOS);
+
     // Load Default Configuration
     s_conf server_conf;
-    server_conf = parse_config("G:\\GitHub\\khudro\\khudro.conf");
+    server_conf = parse_config("khudro.conf");
 
     if(strcmp(default_ip, server_conf.default_ip)){
         strcpy(default_ip, server_conf.default_ip);
@@ -80,6 +82,18 @@ int main(){
     if(max_buffer != server_conf.max_buffer){
         max_buffer = server_conf.max_buffer;
     }
+
+    printf("Configuration Loaded:\n");
+    printf("Default IP: %s\n", server_conf.default_ip);
+    printf("Default Port: %d\n", server_conf.default_port);
+    printf("Default Directory: %s\n", server_conf.default_dir);
+    if(server_conf.compression == 0){
+        printf("Compression: Disabled\n");
+    }else{
+        printf("Compression: Enabled\n");
+    }
+    printf("Maximum Buffer: %llu Byte(s)\n\n", server_conf.max_buffer);
+
 
 
     /* Start Socket Initialization */
