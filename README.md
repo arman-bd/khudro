@@ -8,6 +8,14 @@ but the main purpose of this project is to
 build a lightweight web-server with 
 a small functionality of serving simple files.
 
+
+## IMPORTANT
+
+Don't forget to add Socket & Thread in your compiler path / environment.
+
+* pthread
+* ws_32
+
 ## Features
 
 * Serves Static Files
